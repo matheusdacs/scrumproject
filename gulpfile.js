@@ -1,7 +1,14 @@
 var elixir = require('laravel-elixir');
 
 elixir(function(mix) {
-    mix.styles( ['../../../node_modules/bootstrap/dist/css/bootstrap.css', 'resources/assets/css/style.css'], 'public/css/styles.css');
+    mix.styles( ['../../../node_modules/bootstrap/dist/css/bootstrap.css', '../../../node_modules/fancybox/dist/css/jquery.fancybox.css','resources/assets/css/style.css'], 'public/css/styles.css');
 
-    mix.scripts(['../../../node_modules/bootstrap/dist/js/bootstrap.min.js'], 'public/js/scripts.js');
+    //js do bootstrap
+    mix.scripts(['../../../node_modules/bootstrap/dist/js/bootstrap.min.js'], 'public/js/bootstrap.min.js');
+
+    //fancybox
+    mix.scripts(['../../../node_modules/fancybox/dist/js/jquery.fancybox.pack.js'], 'public/js/jquery.fancybox.pack.js');
+
+    //JQuery
+    mix.scripts(['../../../node_modules/jquery/dist/jquery.min.js'], 'public/js/jquery.min.js');
 });

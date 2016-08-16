@@ -13,6 +13,13 @@
     <link rel="stylesheet" href="/css/styles.css">
     <script src="https://use.fontawesome.com/56303a30c7.js"></script>
 
+    <!-- jQuery -->
+    <script src="/js/jquery.min.js"></script>
+
+    <!-- Bootstrap Core JavaScript --> 
+    <script src="/js/bootstrap.min.js"></script>
+    <script src="/js/jquery.fancybox.pack.js"></script>
+
 </head>
 
 <body>
@@ -20,8 +27,24 @@
         $user = Auth::user();
     ?>
 
-    <div id="wrapper">
+    <script>
+        $(document).ready(function() {
 
+            $( ".meusdados" ).click(function() {
+                $.ajax({
+                  url: "/editarcadastro",
+                  cache: false
+                })
+                  .done(function( html ) {
+                    $.fancybox( html, {});
+                  });
+            });
+
+
+        });
+    </script>
+
+    <div id="wrapper">
         <!-- Navigation -->
         <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
             <div class="navbar-header">
@@ -44,7 +67,7 @@
                     <ul class="dropdown-menu dropdown-user">
                         <li><a href="#"><i class="fa fa-user fa-fw"></i><?php echo $user['email'] ?></a>
                         </li>
-                        <li><a href="#"><i class="fa fa-gear fa-fw"></i> Meus dados</a>
+                        <li><a href="#" class="meusdados"><i class="fa fa-gear fa-fw"></i> Meus dados</a>
                         </li>
                         <li class="divider"></li>
                         <li><a href="/sair"><i class="fa fa-sign-out fa-fw"></i> Sair</a>
@@ -164,13 +187,6 @@
             <!-- /.navbar-static-side -->
         </nav>
     </div>
-
-
-    <!-- jQuery -->
-    <script src="/js/jquery.min.js"></script>
-
-    <!-- Bootstrap Core JavaScript -->
-    <script src="/js/scripts.js"></script>
 
 </body>
 
