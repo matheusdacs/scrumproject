@@ -6,7 +6,7 @@
                 <h3 class="panel-title">Editar meu cadastro</h3>
             </div>
               <div class="panel-body">
-                <form method="POST" action="/registrar">
+                <form method="POST" action="/editarlogado">
                     {!! csrf_field() !!}
                     <div class="form-group">
                         <label>Nome</label> 
