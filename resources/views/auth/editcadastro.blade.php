@@ -1,5 +1,6 @@
 
-<div class="container-fluid">
+
+<div class="container-fluid" style="min-width:450px;">
           <div class="col-md-12">
             <div class="panel panel-default">
               <div class="panel-heading">
@@ -10,25 +11,28 @@
                     {!! csrf_field() !!}
                     <div class="form-group">
                         <label>Nome</label> 
-                        <input type="text" class="form-control" name="name" placeholder="Digite seu nome completo" value="{{ old('name') }}">
+                        <input type="text" class="form-control" name="name" placeholder="Digite seu nome completo" value="{{$userdados['name']}}">
                     </div>
 
                     <div class="form-group">
                         <label>E-mail</label> 
-                        <input type="email" class="form-control" placeholder="seuemail@exemplo.com.br" name="email" value="{{ old('email') }}">
+                        <input type="email" class="form-control" placeholder="seuemail@exemplo.com.br" name="email" value="{{$userdados['email']}}">
                     </div>
 
                     <div class="form-group">
-                        <label>Senha</label> 
-                        <input type="password" class="form-control" placeholder="Digite sua senha" name="password">
+                        <label>Senha atual</label> 
+                        <input type="password" class="form-control" placeholder="Digite sua senha atual" name="password">
                     </div>
 
                     <div class="form-group">
-                        <label>Confirmação de senha</label> 
-                        <input type="password" class="form-control" placeholder="Confirme sua senha" name="password_confirmation">
+                        <label>Nova Senha</label> 
+                        <input type="password" class="form-control" placeholder="Nova senha" name="password_new">
                     </div>
 
-                    
+                     <div class="form-group">
+                        <label>Nova Senha</label> 
+                        <input type="password" class="form-control" placeholder="Confirme sua nova senha" name="password_new_confirmation">
+                    </div>                   
 
                     @if (count($errors) > 0)
                         <div class="alert alert-danger">
