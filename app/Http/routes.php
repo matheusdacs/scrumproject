@@ -18,6 +18,12 @@ Route::get('editarcadastro', [
     'uses' => 'Auth\EditUserController@index'
 ]);
 
+Route::post('editarcadastro', [ 
+	'as' => 'editarcadastro.edituserLogged', 
+    'middleware' => 'auth',
+    'uses' => 'Auth\EditUserController@edituserLogged'
+]);
+
 
 // rotas de autenticação
 Route::get('entrar', 'Auth\AuthController@getLogin');
@@ -27,5 +33,4 @@ Route::get('sair', 'Auth\AuthController@logout');
 // rotas para registros
 Route::get('registrar', 'Auth\AuthController@getRegister');
 Route::post('registrar', 'Auth\AuthController@postRegister');
-
 

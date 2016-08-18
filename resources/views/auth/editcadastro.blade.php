@@ -7,7 +7,7 @@
                 <h3 class="panel-title">Editar meu cadastro</h3>
             </div>
               <div class="panel-body">
-                <form method="POST" action="/editarlogado">
+                <form method="POST" action="/editarcadastro">
                     {!! csrf_field() !!}
                     <div class="form-group">
                         <label>Nome</label> 
@@ -26,12 +26,12 @@
 
                     <div class="form-group">
                         <label>Nova Senha</label> 
-                        <input type="password" class="form-control" placeholder="Nova senha" name="password_new">
+                        <input type="password" class="form-control" placeholder="Nova senha" name="passwordnew">
                     </div>
 
                      <div class="form-group">
                         <label>Nova Senha</label> 
-                        <input type="password" class="form-control" placeholder="Confirme sua nova senha" name="password_new_confirmation">
+                        <input type="password" class="form-control" placeholder="Confirme sua nova senha" name="passwordnew_confirmation">
                     </div>                   
 
                     @if (count($errors) > 0)
@@ -44,8 +44,7 @@
                         </div>
                     @endif 
                  
-
-                    <input class="btn btn-lg btn-success btn-block" type="submit" value="registrar">
+                    <input class="btn btn-lg btn-success btn-block" type="submit" value="Salvar">
 
                 </form>
               </div>
