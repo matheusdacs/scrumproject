@@ -7,7 +7,7 @@ Route::get('/', function () {
 
 
 Route::get('logado', ['middleware' => 'auth', function() {
-    return view('welcome');
+    return view('main');
 }]);
 
 //Route::get('editarcadastro', ['as' => 'editarcadastro.index', 'uses' => 'Auth\EditUserController@index' ]);
