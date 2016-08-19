@@ -54,7 +54,7 @@ class EditUserController extends Controller
 				$user->password = bcrypt($request->input('passwordnew'));
 				$user->name = $request->input('name');
 				$user->save();	
-				return response()->json( ['success' => 'dados salvos com sucesso!']);	
+				return response()->json( ['success' => 'Dados salvos com sucesso!']);	
 			}
 		}
 
