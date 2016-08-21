@@ -1,5 +1,9 @@
 var elixir = require('laravel-elixir');
 
+require('laravel-elixir-vueify');
+
+
+
 elixir(function(mix) {
     mix.styles( ['../../../node_modules/bootstrap/dist/css/bootstrap.css', '../../../node_modules/fancybox/dist/css/jquery.fancybox.css','resources/assets/css/style.css'], 'public/css/styles.css');
 
@@ -11,4 +15,14 @@ elixir(function(mix) {
 
     //JQuery
     mix.scripts(['../../../node_modules/jquery/dist/jquery.min.js'], 'public/js/jquery.min.js');
+
+
+    //main script
+    mix.scripts(['resources/assets/js/main.js'], 'public/js/main.js');
+
+    //list of projects using vue.js
+    mix.browserify('listproject.js');
+
+
+
 });

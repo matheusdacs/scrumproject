@@ -10,19 +10,43 @@ Route::get('logado', ['middleware' => 'auth', function() {
     return view('main');
 }]);
 
-//Route::get('editarcadastro', ['as' => 'editarcadastro.index', 'uses' => 'Auth\EditUserController@index' ]);
-
 Route::get('editarcadastro', [
 	'as' => 'editarcadastro.index', 
     'middleware' => 'auth',
     'uses' => 'Auth\EditUserController@index'
 ]);
 
+
 Route::post('editarcadastro', [ 
 	'as' => 'editarcadastro.edituserLogged', 
     'middleware' => 'auth',
     'uses' => 'Auth\EditUserController@edituserLogged'
 ]);
+
+
+//------------------------routes related to project--------------------------------
+
+//New project - get
+Route::get('project/new', [
+	'as' => 'project.index', 
+    'middleware' => 'auth',
+    'uses' => 'project\ProjectController@index'
+]);
+
+//NewProject post
+Route::post('project/new', [
+	'as' => 'project.addproject', 
+    'middleware' => 'auth',
+    'uses' => 'project\ProjectController@addproject'
+]);
+
+//list and edit projects
+Route::get('project/list', [
+	'as' => 'project.listProjects', 
+    'middleware' => 'auth',
+    'uses' => 'project\ProjectController@listProjects'
+]);
+
 
 
 // rotas de autenticação

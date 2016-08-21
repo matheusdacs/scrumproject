@@ -2,7 +2,6 @@
 <html lang="en">
 
 <head>
-
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,14 +10,8 @@
     <title>Projeto Scrum - Online</title>
     <link href="https://fonts.googleapis.com/css?family=Lato:100" rel="stylesheet" type="text/css">
     <link rel="stylesheet" href="/css/styles.css">
-    <script src="https://use.fontawesome.com/56303a30c7.js"></script>
-
     <!-- jQuery -->
-    <script src="/js/jquery.min.js"></script>
-
-    <!-- Bootstrap Core JavaScript --> 
-    <script src="/js/bootstrap.min.js"></script>
-    <script src="/js/jquery.fancybox.pack.js"></script>
+    <script src="/js/jquery.min.js"></script> 
 
 </head>
 
@@ -27,27 +20,13 @@
         $user = Auth::user();
     ?>
 
-    <script>
-        $(document).ready(function() {
-
-            $( ".meusdados" ).click(function() {
-                $.ajax({
-                  url: "/editarcadastro",
-                  cache: false
-                })
-                  .done(function( html ) {
-                    $.fancybox( html, {});
-                  });
-            });
-        });
-    </script>
 
     <div id="wrapper">
         <!-- Navigation -->
         <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                    <span class="sr-only">Toggle navigation</span>
+                    <span class="sr-only">Fechar navegação</span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
@@ -67,7 +46,7 @@
                             <a href="#"><i class="fa fa-user fa-fw"></i><?php echo $user['email'] ?></a>
                         </li>
                         <li>
-                            <a href="#" class="meusdados"><i class="fa fa-gear fa-fw"></i> Meus dados</a>
+                            <a href="#" class="meusdados" urlajax="/editarcadastro"><i class="fa fa-gear fa-fw"></i> Meus dados</a>
                         </li>
 
                         <li class="divider"></li>
@@ -90,7 +69,11 @@
                             <a href="/logado"><i class="fa fa-file-text-o"></i> Meus Projetos<span class="fa arrow"></span></a>
                             <ul class="nav nav-second-level">
                                 <li>
-                                    <a href="">Novo Projeto</a>
+                                    <a class="newproject" urlajax="/project/new" href="#"><i class="fa fa-angle-right" aria-hidden="true"></i> Novo Projeto</a>
+                                </li>
+
+                                <li>
+                                    <a class="listproject" urlajax="project/list" href="#"><i class="fa fa-angle-right" aria-hidden="true"></i> Listar Projetos</a>
                                 </li>
                             </ul>
                             <!-- /.nav-second-level -->
@@ -111,6 +94,13 @@
         </div>
 
     </div>
+
+    <script src="https://use.fontawesome.com/56303a30c7.js"></script>
+    <script src="/js/jquery.fancybox.pack.js"></script>
+    <!-- Bootstrap Core JavaScript --> 
+    <script src="/js/bootstrap.min.js"></script>
+    <script src="js/main.js"></script>
+
 
 
 </body>
