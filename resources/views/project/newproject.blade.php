@@ -41,7 +41,7 @@
                 <h3 class="panel-title">Novo projeto</h3>
             </div>
               <div class="panel-body">
-                    {!! csrf_field() !!}
+                   
                     <div class="form-group">
                         <label>Nome do projeto</label> 
                         <input type="text" class="form-control" name="name" placeholder="Digite o nome do projeto" value="">

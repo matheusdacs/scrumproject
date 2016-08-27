@@ -19,7 +19,7 @@ class ProjectController extends Controller
     protected function validator(array $data)
     {
         return Validator::make($data, [
-            'name' => 'required|max:255',
+            'name' => 'required|max:50',
             'description' => 'required|max:500',
         ]);
     }
@@ -46,6 +46,34 @@ class ProjectController extends Controller
     	$projects = Project::all();
 
     	return view('project/listproject')->with(compact('projects'));
+
+    }
+
+    public function editprojects(Request $request){
+        $validator = $this->validator($request->all());
+
+        if ($validator->fails()) {  
+            return response()->json( ['error' => $validator->errors()->all()]);
+        }else{
+
+            $project = Project::find($request->input('id'));
+            $project->name = $request->input('name');
+            $project->description = $request->input('description');
+            $project->save();
+            return response()->json( ['success' => 'Projeto salvo com sucesso!']);   
+        }
+    }
+
+    public function deleteProject(Request $request){
+        $project = Project::find($request->id);
+        if(!is_null($project)){
+            $project->delete();  
+            return response()->json( ['success' => 'Projeto removido com sucesso:' + $request->id]);  
+        }else{
+            return response()->json( ['error' => 'Registro não encontrado para deletar!']);  
+        }
+
+              
 
     }
 

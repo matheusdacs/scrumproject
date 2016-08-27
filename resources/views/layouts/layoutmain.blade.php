@@ -7,12 +7,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
     <title>Projeto Scrum - Online</title>
     <link href="https://fonts.googleapis.com/css?family=Lato:100" rel="stylesheet" type="text/css">
     <link rel="stylesheet" href="/css/styles.css">
     <!-- jQuery -->
     <script src="/js/jquery.min.js"></script> 
-
+    <script type="text/javascript">
+       $.ajaxSetup({
+           headers: {
+               'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+           }
+       });
+    </script>
 </head>
 
 <body>
@@ -73,11 +80,40 @@
                                 </li>
 
                                 <li>
-                                    <a class="listproject" urlajax="project/list" href="#"><i class="fa fa-angle-right" aria-hidden="true"></i> Listar Projetos</a>
+                                    <a class="listproject" urlajax="project/list" href="#"><i class="fa fa-angle-right" aria-hidden="true"></i> Editar Projetos</a>
                                 </li>
                             </ul>
                             <!-- /.nav-second-level -->
                         </li>
+
+                        <li>
+                            <a href="/logado"><i class="fa fa-calendar"></i><span class="fa arrow"></span> Minhas sprints</a>
+                            <ul class="nav nav-second-level">
+                                <li>
+                                    <a class="newproject" urlajax="/project/new" href="#"><i class="fa fa-angle-right" aria-hidden="true"></i> Nova Sprint</a>
+                                </li>
+
+                                <li>
+                                    <a class="listproject" urlajax="project/list" href="#"><i class="fa fa-angle-right" aria-hidden="true"></i> Editar Sprints</a>
+                                </li>
+                            </ul>
+                            <!-- /.nav-second-level -->
+                        </li>
+
+                        <li>
+                            <a href="/logado"><i class="fa fa fa-calendar-check-o"></i><span class="fa arrow"></span> Tarefas</a>
+                            <ul class="nav nav-second-level">
+                                <li>
+                                    <a class="newproject" urlajax="/project/new" href="#"><i class="fa fa-angle-right" aria-hidden="true"></i> Nova tarefa</a>
+                                </li>
+
+                                <li>
+                                    <a class="listproject" urlajax="project/list" href="#"><i class="fa fa-angle-right" aria-hidden="true"></i> Editar Sprints</a>
+                                </li>
+                            </ul>
+                            <!-- /.nav-second-level -->
+                        </li>
+
                     </ul>
                 </div>
             </div>

@@ -1,5 +1,7 @@
 import Vue from 'vue'
-import PjList from './listproject.vue'   
+
+
+import PjList from './components/listproject.vue'     
 
 	new Vue({
 
@@ -7,10 +9,6 @@ import PjList from './listproject.vue'
 
 		components: {
 			PjList	
-		},
-
-		data: { 
-			title: 'Lista de Projetos'
 		}
 
-	}) 
+	})   

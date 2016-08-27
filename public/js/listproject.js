@@ -1,4 +1,14 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+module.exports = { "default": require("core-js/library/fn/json/stringify"), __esModule: true };
+},{"core-js/library/fn/json/stringify":2}],2:[function(require,module,exports){
+var core = require('../../modules/$.core');
+module.exports = function stringify(it){ // eslint-disable-line no-unused-vars
+  return (core.JSON && core.JSON.stringify || JSON.stringify).apply(JSON, arguments);
+};
+},{"../../modules/$.core":3}],3:[function(require,module,exports){
+var core = module.exports = {version: '1.2.6'};
+if(typeof __e == 'number')__e = core; // eslint-disable-line no-undef
+},{}],4:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -160,7 +170,308 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],2:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
+var Vue // late bind
+var map = Object.create(null)
+var shimmed = false
+var isBrowserify = false
+
+/**
+ * Determine compatibility and apply patch.
+ *
+ * @param {Function} vue
+ * @param {Boolean} browserify
+ */
+
+exports.install = function (vue, browserify) {
+  if (shimmed) return
+  shimmed = true
+
+  Vue = vue
+  isBrowserify = browserify
+
+  exports.compatible = !!Vue.internalDirectives
+  if (!exports.compatible) {
+    console.warn(
+      '[HMR] vue-loader hot reload is only compatible with ' +
+      'Vue.js 1.0.0+.'
+    )
+    return
+  }
+
+  // patch view directive
+  patchView(Vue.internalDirectives.component)
+  console.log('[HMR] Vue component hot reload shim applied.')
+  // shim router-view if present
+  var routerView = Vue.elementDirective('router-view')
+  if (routerView) {
+    patchView(routerView)
+    console.log('[HMR] vue-router <router-view> hot reload shim applied.')
+  }
+}
+
+/**
+ * Shim the view directive (component or router-view).
+ *
+ * @param {Object} View
+ */
+
+function patchView (View) {
+  var unbuild = View.unbuild
+  View.unbuild = function (defer) {
+    if (!this.hotUpdating) {
+      var prevComponent = this.childVM && this.childVM.constructor
+      removeView(prevComponent, this)
+      // defer = true means we are transitioning to a new
+      // Component. Register this new component to the list.
+      if (defer) {
+        addView(this.Component, this)
+      }
+    }
+    // call original
+    return unbuild.call(this, defer)
+  }
+}
+
+/**
+ * Add a component view to a Component's hot list
+ *
+ * @param {Function} Component
+ * @param {Directive} view - view directive instance
+ */
+
+function addView (Component, view) {
+  var id = Component && Component.options.hotID
+  if (id) {
+    if (!map[id]) {
+      map[id] = {
+        Component: Component,
+        views: [],
+        instances: []
+      }
+    }
+    map[id].views.push(view)
+  }
+}
+
+/**
+ * Remove a component view from a Component's hot list
+ *
+ * @param {Function} Component
+ * @param {Directive} view - view directive instance
+ */
+
+function removeView (Component, view) {
+  var id = Component && Component.options.hotID
+  if (id) {
+    map[id].views.$remove(view)
+  }
+}
+
+/**
+ * Create a record for a hot module, which keeps track of its construcotr,
+ * instnaces and views (component directives or router-views).
+ *
+ * @param {String} id
+ * @param {Object} options
+ */
+
+exports.createRecord = function (id, options) {
+  if (typeof options === 'function') {
+    options = options.options
+  }
+  if (typeof options.el !== 'string' && typeof options.data !== 'object') {
+    makeOptionsHot(id, options)
+    map[id] = {
+      Component: null,
+      views: [],
+      instances: []
+    }
+  }
+}
+
+/**
+ * Make a Component options object hot.
+ *
+ * @param {String} id
+ * @param {Object} options
+ */
+
+function makeOptionsHot (id, options) {
+  options.hotID = id
+  injectHook(options, 'created', function () {
+    var record = map[id]
+    if (!record.Component) {
+      record.Component = this.constructor
+    }
+    record.instances.push(this)
+  })
+  injectHook(options, 'beforeDestroy', function () {
+    map[id].instances.$remove(this)
+  })
+}
+
+/**
+ * Inject a hook to a hot reloadable component so that
+ * we can keep track of it.
+ *
+ * @param {Object} options
+ * @param {String} name
+ * @param {Function} hook
+ */
+
+function injectHook (options, name, hook) {
+  var existing = options[name]
+  options[name] = existing
+    ? Array.isArray(existing)
+      ? existing.concat(hook)
+      : [existing, hook]
+    : [hook]
+}
+
+/**
+ * Update a hot component.
+ *
+ * @param {String} id
+ * @param {Object|null} newOptions
+ * @param {String|null} newTemplate
+ */
+
+exports.update = function (id, newOptions, newTemplate) {
+  var record = map[id]
+  // force full-reload if an instance of the component is active but is not
+  // managed by a view
+  if (!record || (record.instances.length && !record.views.length)) {
+    console.log('[HMR] Root or manually-mounted instance modified. Full reload may be required.')
+    if (!isBrowserify) {
+      window.location.reload()
+    } else {
+      // browserify-hmr somehow sends incomplete bundle if we reload here
+      return
+    }
+  }
+  if (!isBrowserify) {
+    // browserify-hmr already logs this
+    console.log('[HMR] Updating component: ' + format(id))
+  }
+  var Component = record.Component
+  // update constructor
+  if (newOptions) {
+    // in case the user exports a constructor
+    Component = record.Component = typeof newOptions === 'function'
+      ? newOptions
+      : Vue.extend(newOptions)
+    makeOptionsHot(id, Component.options)
+  }
+  if (newTemplate) {
+    Component.options.template = newTemplate
+  }
+  // handle recursive lookup
+  if (Component.options.name) {
+    Component.options.components[Component.options.name] = Component
+  }
+  // reset constructor cached linker
+  Component.linker = null
+  // reload all views
+  record.views.forEach(function (view) {
+    updateView(view, Component)
+  })
+  // flush devtools
+  if (window.__VUE_DEVTOOLS_GLOBAL_HOOK__) {
+    window.__VUE_DEVTOOLS_GLOBAL_HOOK__.emit('flush')
+  }
+}
+
+/**
+ * Update a component view instance
+ *
+ * @param {Directive} view
+ * @param {Function} Component
+ */
+
+function updateView (view, Component) {
+  if (!view._bound) {
+    return
+  }
+  view.Component = Component
+  view.hotUpdating = true
+  // disable transitions
+  view.vm._isCompiled = false
+  // save state
+  var state = extractState(view.childVM)
+  // remount, make sure to disable keep-alive
+  var keepAlive = view.keepAlive
+  view.keepAlive = false
+  view.mountComponent()
+  view.keepAlive = keepAlive
+  // restore state
+  restoreState(view.childVM, state, true)
+  // re-eanble transitions
+  view.vm._isCompiled = true
+  view.hotUpdating = false
+}
+
+/**
+ * Extract state from a Vue instance.
+ *
+ * @param {Vue} vm
+ * @return {Object}
+ */
+
+function extractState (vm) {
+  return {
+    cid: vm.constructor.cid,
+    data: vm.$data,
+    children: vm.$children.map(extractState)
+  }
+}
+
+/**
+ * Restore state to a reloaded Vue instance.
+ *
+ * @param {Vue} vm
+ * @param {Object} state
+ */
+
+function restoreState (vm, state, isRoot) {
+  var oldAsyncConfig
+  if (isRoot) {
+    // set Vue into sync mode during state rehydration
+    oldAsyncConfig = Vue.config.async
+    Vue.config.async = false
+  }
+  // actual restore
+  if (isRoot || !vm._props) {
+    vm.$data = state.data
+  } else {
+    Object.keys(state.data).forEach(function (key) {
+      if (!vm._props[key]) {
+        // for non-root, only restore non-props fields
+        vm.$data[key] = state.data[key]
+      }
+    })
+  }
+  // verify child consistency
+  var hasSameChildren = vm.$children.every(function (c, i) {
+    return state.children[i] && state.children[i].cid === c.constructor.cid
+  })
+  if (hasSameChildren) {
+    // rehydrate children
+    vm.$children.forEach(function (c, i) {
+      restoreState(c, state.children[i])
+    })
+  }
+  if (isRoot) {
+    Vue.config.async = oldAsyncConfig
+  }
+}
+
+function format (id) {
+  var match = id.match(/[^\/]+\.vue$/)
+  return match ? match[0] : id
+}
+
+},{}],6:[function(require,module,exports){
 (function (process,global){
 /*!
  * Vue.js v1.0.20
@@ -9984,12 +10295,156 @@ if (config.devtools) {
 
 module.exports = Vue;
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":1}],3:[function(require,module,exports){
+},{"_process":4}],7:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+   value: true
+});
+
+var _stringify = require('babel-runtime/core-js/json/stringify');
+
+var _stringify2 = _interopRequireDefault(_stringify);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = {
+   props: ['projects'],
+
+   data: function data() {
+      return {
+         list: [],
+         sortProperty: 'name',
+         sortDirection: 1,
+         editing: -1
+      };
+   },
+
+
+   methods: {
+      sort: function sort(ev, property) {
+         ev.preventDefault();
+
+         this.sortProperty = property;
+
+         if (this.sortDirection == 1) {
+            this.sortDirection = -1;
+         } else {
+            this.sortDirection = 1;
+         }
+      },
+
+
+      clickdeleteproj: function clickdeleteproj(ev, idproject) {
+
+         var vconfirm = confirm('Deseja realmente excluir o registro?');
+
+         if (vconfirm == true) {
+
+            $.ajax({
+               url: '/project/delete/' + idproject,
+               type: 'get',
+               dataType: 'json'
+
+            }).done(function (json) {
+               if (json['success']) {
+                  console.log($('tr #trlist' + idproject));
+                  $('#trlist' + idproject).remove();
+               } else {
+                  alert(json['error']);
+               }
+            });
+         }
+      },
+
+      clickelements: function clickelements(ev, idproject) {
+         ev.preventDefault();
+
+         if (this.editing == 1) {
+
+            $.ajax({
+               url: '/project/edit',
+               type: 'post',
+               dataType: 'json',
+               data: { name: $('.inputthname' + idproject).prop('value'), description: $('.inputthdescription' + idproject).prop('value'), id: idproject }
+            }).done(function (json) {
+
+               if (json['success']) {
+                  $('.thname' + idproject).html($('.inputthname' + idproject).prop('value'));
+                  $('.thdescription' + idproject).html($('.inputthdescription' + idproject).prop('value'));
+                  $('#buttonid' + idproject).attr('value', 'Editar');
+                  $('.buttonedit > [id!="buttonid' + idproject + '"]').prop('disabled', false);
+                  $('.buttonexcluir > [id^="buttondeleteid"]').prop('disabled', false);
+                  $('.display_feedback').html('<div class="alert alert-success"><strong>' + json['success'] + '</strong></div>');
+               } else {
+                  //caso de erro, volta ao estado normal, capturando os valores antigos...
+                  $('.thname' + idproject).html($('.inputthname' + idproject).attr('value'));
+                  $('.thdescription' + idproject).html($('.inputthdescription' + idproject).text());
+                  $('#buttonid' + idproject).attr('value', 'Editar');
+                  $('.buttonedit > [id!="buttonid' + idproject + '"]').prop('disabled', false);
+                  $('.buttonexcluir > [id^="buttondeleteid"]').prop('disabled', false);
+
+                  var vHtml = '<div class="alert alert-danger">';
+
+                  $(jQuery.parseJSON((0, _stringify2.default)(json['error']))).each(function () {
+                     vHtml += '<ul><p><li class="fa fa-exclamation-triangle" aria-hidden="true"> </li>' + this + '</p></ul>';
+                  });
+
+                  vHtml += '</div>';
+
+                  $('.display_feedback').html(vHtml);
+               }
+            }).fail(function () {
+               //caso de erro, volta ao estado normal, capturando os valores antigos...
+               $('.thname' + idproject).html($('.inputthname' + idproject).attr('value'));
+               $('.thdescription' + idproject).html($('.inputthdescription' + idproject).text());
+               $('#buttonid' + idproject).attr('value', 'Editar');
+               $('.buttonedit > [id!="buttonid' + idproject + '"]').prop('disabled', false);
+               $('.buttonexcluir > [id^="buttondeleteid"]').prop('disabled', false);
+            });
+
+            this.editing = -1;
+         } else {
+            //Cria elementos para edição
+            $('.thname' + idproject).html('<input type="text" name="name" class="form-control inputthname' + idproject + '" value="' + $('.thname' + idproject).text() + '">');
+            $('.thdescription' + idproject).html('<textarea name="description" class="form-control inputthdescription' + idproject + '" placeholder="Digite uma descrição aqui..." rows="3">' + $('.thdescription' + idproject).text() + '</textarea>');
+
+            $('.buttonedit > [id!="buttonid' + idproject + '"]').prop('disabled', true);
+            $('.buttonexcluir > [id^="buttondeleteid"]').prop('disabled', true);
+            $('#buttonid' + idproject).attr('value', 'Salvar');
+            this.editing = 1;
+         }
+      }
+
+   },
+
+   ready: function ready() {
+      this.list = JSON.parse(this.projects);
+   }
+};
+if (module.exports.__esModule) module.exports = module.exports.default
+;(typeof module.exports === "function"? module.exports.options: module.exports).template = "\n<div class=\"container\" _v-50575a87=\"\">\n<div class=\"display_feedback\" _v-50575a87=\"\"></div>\n\t<table class=\"table table-bordered table-striped table-hover\" _v-50575a87=\"\">\n\t\t\n\t\t<thead _v-50575a87=\"\">\n\t\t\t<tr _v-50575a87=\"\">\n\t\t\t\t<th width=\"20%\" _v-50575a87=\"\"><a href=\"#\" @click=\"sort($event, 'name')\" _v-50575a87=\"\">Nome</a></th>\n\t\t\t\t<th _v-50575a87=\"\"><a href=\"#\" @click=\"sort($event, 'description')\" _v-50575a87=\"\">Descricao</a></th>\n\t\t\t\t<th width=\"20%\" _v-50575a87=\"\">Editar</th>\n\t\t\t\t<th width=\"7%\" _v-50575a87=\"\">Excluir</th>\n\t\t\t</tr>\n\t\t</thead>\n\n\t\t<tbody class=\"postelements\" _v-50575a87=\"\">\n\t\t\t\t\n\t\t\t<tr v-for=\"p in list | orderBy sortProperty sortDirection\" id=\"trlist{{ p.id }}\" _v-50575a87=\"\">\n\n\t\t\t\t<th class=\"thname{{ p.id }}\" _v-50575a87=\"\">{{ p.name }}</th>\n\t\t\t\t<th class=\"thdescription{{ p.id }}\" _v-50575a87=\"\">{{ p.description }}</th>\n\t\t\t\t<th class=\"buttonedit\" _v-50575a87=\"\"><input type=\"button\" id=\"buttonid{{ p.id }}\" class=\"btn btn-lg btn-success btn-block\" value=\"Editar\" v-on:click=\"clickelements($event, p.id)\" _v-50575a87=\"\"></th>\n\t\t\t\t<th class=\"buttonexcluir\" _v-50575a87=\"\"><input type=\"button\" id=\"buttondeleteid{{ p.id }}\" class=\"btn btn-lg btn-danger btn-block\" value=\"Excluir\" v-on:click=\"clickdeleteproj($event, p.id)\" _v-50575a87=\"\"></th>\n\t\t\t\t\n\t\t\t</tr>\n\n\t\t</tbody>\n\n\t</table>\n\n</div>\n"
+if (module.hot) {(function () {  module.hot.accept()
+  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  var id = "c:\\FontesWeb\\scrumproject\\resources\\assets\\js\\components\\listproject.vue"
+  if (!module.hot.data) {
+    hotAPI.createRecord(id, module.exports)
+  } else {
+    hotAPI.update(id, module.exports, (typeof module.exports === "function" ? module.exports.options : module.exports).template)
+  }
+})()}
+},{"babel-runtime/core-js/json/stringify":1,"vue":6,"vue-hot-reload-api":5}],8:[function(require,module,exports){
 'use strict';
 
 var _vue = require('vue');
 
 var _vue2 = _interopRequireDefault(_vue);
+
+var _listproject = require('./components/listproject.vue');
+
+var _listproject2 = _interopRequireDefault(_listproject);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -9998,15 +10453,11 @@ new _vue2.default({
 	el: 'body',
 
 	components: {
-		PjList: PjList
-	},
-
-	data: {
-		title: 'Lista de Projetos'
+		PjList: _listproject2.default
 	}
 
 });
 
-},{"vue":2}]},{},[3]);
+},{"./components/listproject.vue":7,"vue":6}]},{},[8]);
 
 //# sourceMappingURL=listproject.js.map

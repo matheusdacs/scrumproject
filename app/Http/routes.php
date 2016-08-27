@@ -6,10 +6,17 @@ Route::get('/', function () {
 });
 
 
-Route::get('logado', ['middleware' => 'auth', function() {
+/*Route::get('logado', ['middleware' => 'auth', function() {
     return view('main');
-}]);
+}]);*/
 
+Route::get('logado', [ 
+    'as' => 'logado.index', 
+    'middleware' => 'auth',
+    'uses' => 'Main\Maincontroller@index'
+]);
+
+//------------------------routes related to edit users --------------------------------
 Route::get('editarcadastro', [
 	'as' => 'editarcadastro.index', 
     'middleware' => 'auth',
@@ -40,15 +47,29 @@ Route::post('project/new', [
     'uses' => 'project\ProjectController@addproject'
 ]);
 
-//list and edit projects
+//list projects
 Route::get('project/list', [
 	'as' => 'project.listProjects', 
     'middleware' => 'auth',
     'uses' => 'project\ProjectController@listProjects'
 ]);
 
+//edit projects
+Route::post('project/edit', [
+    'as' => 'project.editprojects', 
+    'middleware' => 'auth',
+    'uses' => 'project\ProjectController@editprojects'
+]);
+
+//Delete projects
+Route::get('project/delete/{id}', [
+    'as' => 'project.deleteProject', 
+    'middleware' => 'auth',
+    'uses' => 'project\ProjectController@deleteProject'
+]);
 
 
+//------------------------routes related to project--------------------------------
 // rotas de autenticação
 Route::get('entrar', 'Auth\AuthController@getLogin');
 Route::post('entrar', 'Auth\AuthController@postLogin');

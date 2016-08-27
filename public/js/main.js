@@ -8,6 +8,5 @@
                     $.fancybox( html, {});
                   });   
             });
-
         });
 //# sourceMappingURL=main.js.map
